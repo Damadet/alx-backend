@@ -8,4 +8,4 @@ read -p "Enter your commit message: " COMMIT
 
 git commit -m '$COMMIT'
 
-git push
+git push -u damadet

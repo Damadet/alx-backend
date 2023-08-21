@@ -1,20 +1,10 @@
 #!/usr/bin/env python3
-
+"""
+Contains class with methods to create simple pagination from csv data
+"""
 import csv
-import math
-from typing import List, Tuple
-
-
-def index_range(page: int, page_size: int) -> Tuple:
-    """helper function
-    Args:
-        page (int): page index
-        page_size (int): _description_
-    Returns:
-        Tuple: containing start-index and end-index
-    """
-    end_index = page * page_size
-    return ((end_index - page_size, end_index))
+from typing import List
+index_range = __import__('0-simple_helper_function').index_range
 
 
 class Server:
@@ -26,7 +16,10 @@ class Server:
         self.__dataset = None
 
     def dataset(self) -> List[List]:
-        """Cached dataset
+        """
+        Reads from csv file and returns the dataset.
+        Returns:
+            List[List]: The dataset.
         """
         if self.__dataset is None:
             with open(self.DATA_FILE) as f:
@@ -36,52 +29,51 @@ class Server:
 
         return self.__dataset
 
-    def get_page(self, page: int = 1, page_size: int = 10) -> List[List]:
-        """get_page
-        Args:
-            page (int, optional): page. Defaults to 1.
-            page_size (int, optional): page_size. Defaults to 10.
-        Returns:
-            List[List]: list of items
+    @staticmethod
+    def assert_positive_integer_type(value: int) -> None:
         """
-        assert type(page) is int and page > 0
-        assert type(page_size) is int and page_size > 0
+        Asserts that the value is a positive integer.
+        Args:
+            value (int): The value to be asserted.
+        """
+        assert type(value) is int and value > 0
 
-        self.dataset()
-
-        if self.__dataset is None:
-            return []
-
-        idx_range = index_range(page, page_size)
-        data = self.__dataset[idx_range[0]:idx_range[1]]
+    def get_page(self, page: int = 1, page_size: int = 10) -> List[List]:
+        """
+        Returns a page of the dataset.
+        Args:
+            page (int): The page number.
+            page_size (int): The page size.
+        Returns:
+            List[List]: The page of the dataset.
+        """
+        self.assert_positive_integer_type(page)
+        self.assert_positive_integer_type(page_size)
+        dataset = self.dataset()
+        start, end = index_range(page, page_size)
+        try:
+            data = dataset[start:end]
+        except IndexError:
+            data = []
         return data
 
     def get_hyper(self, page: int = 1, page_size: int = 10) -> dict:
-        """returns all necessary key value pairs for pagination
-        Args:
-            page (int, optional): page index. Defaults to 1.
-            page_size (int, optional): number of items in page. Defaults to 10.
-        Returns:
-            dict: dictionary of pagination attributes
         """
-
+        Returns a page of the dataset.
+        Args:
+            page (int): The page number.
+            page_size (int): The page size.
+        Returns:
+            List[List]: The page of the dataset.
+        """
+        total_pages = len(self.dataset()) // page_size + 1
         data = self.get_page(page, page_size)
-        dataset_length = len(self.dataset())
-
-        try:
-            total_pages = math.ceil(dataset_length / page_size)
-        except Exception:
-            total_pages = 0
-
-        next_page = page + 1 if page < total_pages else None
-
-        prev_page = page - 1 if page > 1 else None
-
-        return {
-            'page_size': page_size,
-            'page': page,
-            'data': data,
-            'next_page': next_page,
-            'prev_page': prev_page,
-            'total_pages': total_pages
+        info = {
+            "page": page,
+            "page_size": page_size if page_size <= len(data) else len(data),
+            "total_pages": total_pages,
+            "data": data,
+            "prev_page": page - 1 if page > 1 else None,
+            "next_page": page + 1 if page + 1 <= total_pages else None
         }
+        return info

@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 '''
-
+BAsic dictionary caching
 '''
-import base_caching
-
-BaseCaching = base_caching.BaseCaching
+BaseCaching = __import__('base_caching').BaseCaching
 
 
 class BasicCache(BaseCaching):
+    '''Basic caching class'''
 
     def put(self, key, item):
 

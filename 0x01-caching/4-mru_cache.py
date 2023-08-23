@@ -1,51 +1,60 @@
-#!/usr/bin/python3
-""" MRU caching """
-
-BaseCaching = __import__('base_caching').BaseCaching
+#!/usr/bin/env python3
+"""MRU caching"""
+from base_caching import BaseCaching
 
 
 class MRUCache(BaseCaching):
-    ''' Least Recently Used Caching System '''
+    """MRU Cache class definition
+
+    Args:
+        BaseCaching (obj): parent class
+    """
 
     def __init__(self):
-        self.key_usage = {}
-        self.counter = 0
-        self.cache_data = {}
         super().__init__()
+        self.stack = []
 
     def put(self, key, item):
-        ''' Adds an item to the cache
-            Removes last item if cache size is
-            greater than BaseCaching.MAX_ITEMS
-        '''
-        if key is None or item is None:
+        """add item to storage
+
+        Args:
+            key (str): key
+            item (str): corresponding value at key
+        """
+        if not key or not item:
             return
 
-        if self.counter < 1:
-            self.key_usage[key] = self.counter
-        else:
-            self.counter += 1
-            self.key_usage[key] = self.counter
-        if len(self.cache_data) >= BaseCaching.MAX_ITEMS:
-            if key not in self.cache_data:
-                mru = self.get_mru(self.key_usage) - 1
-                for k, value in self.key_usage.items():
-                    if value == mru:
-                        del self.cache_data[k]
-                        print(f"DISCARD: {k}")
-                        del self.key_usage[k]
-                        break
+        updated = True if key in self.cache_data.keys() else False
+
         self.cache_data[key] = item
 
-    def get_mru(self, dico):
-        ''' gets the MRU key from a dictionary '''
-        return max(dico.values())
+        self.stack.append(key)
+
+        if updated:
+            self.updated_key = key
+            first_index_of_key = self.stack.index(key)
+            del self.stack[first_index_of_key]
+            return
+
+        if len(self.cache_data) > self.MAX_ITEMS:
+            del self.cache_data[self.stack[-2]]
+            print(f'DISCARD: {self.stack[-2]}')
+            del self.stack[-2]
 
     def get(self, key):
-        '''gets an item with specified key from cache'''
-        if key not in self.cache_data:
+        """get value at key
+
+        Args:
+            key (str): key
+
+        Returns:
+            str: value if successful else None
+        """
+        if key not in self.cache_data.keys():
             return None
 
-        self.counter += 1
-        self.key_usage[key] = self.counter
+        self.stack.append(key)
+        first_index_of_key = self.stack.index(key)
+        del self.stack[first_index_of_key]
+
         return self.cache_data.get(key)
